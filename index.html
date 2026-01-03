@@ -7,7 +7,7 @@
     <!-- Biblioteca para exportar para Excel -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <!-- Biblioteca para exportar para PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umm.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * {
@@ -154,11 +154,25 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
+            user-select: none;
         }
         
         .category-title {
             font-size: 1.3rem;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .category-title .toggle-icon {
+            transition: transform 0.3s ease;
+            font-size: 1.1rem;
+        }
+        
+        .category.collapsed .toggle-icon {
+            transform: rotate(-90deg);
         }
         
         .category-total {
@@ -169,10 +183,20 @@
             border-radius: 20px;
         }
         
+        .category-content {
+            max-height: 400px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        
+        .category.collapsed .category-content {
+            max-height: 0;
+        }
+        
         .items-list {
             padding: 20px;
-            max-height: 400px;
             overflow-y: auto;
+            max-height: 350px;
         }
         
         .item {
@@ -324,6 +348,34 @@
             margin-top: 25px;
         }
         
+        .category-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 10px 0;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .category-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-category {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-category:hover {
+            background-color: #2980b9;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 grid-template-columns: 1fr;
@@ -345,13 +397,23 @@
             .quantity-input, .price-input {
                 width: 80px;
             }
+            
+            .category-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .category-buttons {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
         }
     </style>
 </head>
 <body>
     <header>
         <h1>📋 Checklist de Compras Mensais</h1>
-        <p class="subtitle"> Organize suas compras de carne, alimentos, higiene e limpeza</p>
+        <p class="subtitle">Para homem de 32 anos - Organize suas compras de carne, alimentos, higiene e limpeza</p>
     </header>
 
     <div class="controls">
@@ -379,6 +441,15 @@
         </div>
         <div class="total-display">
             R$ <span id="totalValue" class="total-value">0,00</span>
+        </div>
+    </div>
+
+    <div class="category-controls">
+        <h3>Controles das Categorias</h3>
+        <div class="category-buttons">
+            <button class="btn-category" onclick="expandAllCategories()">⬇️ Expandir Todas</button>
+            <button class="btn-category" onclick="collapseAllCategories()">⬆️ Minimizar Todas</button>
+            <button class="btn-category" onclick="toggleAllCategories()">🔄 Alternar Todas</button>
         </div>
     </div>
 
@@ -414,6 +485,7 @@
                 {
                     id: 'carnes',
                     title: '🥩 Carnes (Mensal)',
+                    collapsed: false,
                     items: [
                         { id: 'carne1', name: 'Peito de Frango', quantity: 2, unit: 'kg', price: 0, checked: false },
                         { id: 'carne2', name: 'Coxa/Sobrecoxa de Frango', quantity: 1, unit: 'kg', price: 0, checked: false },
@@ -426,6 +498,7 @@
                 {
                     id: 'sexta-basica',
                     title: '🛒 Sexta Básica',
+                    collapsed: false,
                     items: [
                         { id: 'sb1', name: 'Arroz', quantity: 5, unit: 'kg', price: 0, checked: false },
                         { id: 'sb2', name: 'Feijão', quantity: 2, unit: 'kg', price: 0, checked: false },
@@ -441,6 +514,7 @@
                 {
                     id: 'higiene',
                     title: '🧴 Higiene Pessoal',
+                    collapsed: false,
                     items: [
                         { id: 'hig1', name: 'Sabonete', quantity: 5, unit: 'unidades', price: 0, checked: false },
                         { id: 'hig2', name: 'Shampoo', quantity: 1, unit: 'frasco 350-500ml', price: 0, checked: false },
@@ -455,6 +529,7 @@
                 {
                     id: 'limpeza',
                     title: '🧽 Limpeza Doméstica',
+                    collapsed: false,
                     items: [
                         { id: 'limp1', name: 'Detergente Líquido (roupas)', quantity: 1, unit: 'frasco 1,5L ou 2kg', price: 0, checked: false },
                         { id: 'limp2', name: 'Amaciante', quantity: 1, unit: 'frasco 1L', price: 0, checked: false },
@@ -469,6 +544,7 @@
                 {
                     id: 'flv',
                     title: '🥦 FLV (Frutas, Legumes, Verduras)',
+                    collapsed: false,
                     items: [
                         { id: 'flv1', name: 'Alho e Cebola', quantity: 1, unit: 'kg', price: 0, checked: false },
                         { id: 'flv2', name: 'Tomate', quantity: 1.5, unit: 'kg', price: 0, checked: false },
@@ -481,6 +557,7 @@
                 {
                     id: 'laticinios',
                     title: '🥛 Laticínios e Outros',
+                    collapsed: false,
                     items: [
                         { id: 'lat1', name: 'Leite UHT', quantity: 7, unit: 'caixas', price: 0, checked: false },
                         { id: 'lat2', name: 'Ovos', quantity: 30, unit: 'unidades', price: 0, checked: false },
@@ -499,13 +576,16 @@
             if (saved) {
                 const parsed = JSON.parse(saved);
                 parsed.categories.forEach((cat, catIndex) => {
-                    cat.items.forEach((item, itemIndex) => {
-                        if (checklistData.categories[catIndex] && checklistData.categories[catIndex].items[itemIndex]) {
-                            checklistData.categories[catIndex].items[itemIndex].price = item.price;
-                            checklistData.categories[catIndex].items[itemIndex].checked = item.checked;
-                            checklistData.categories[catIndex].items[itemIndex].quantity = item.quantity || 1;
-                        }
-                    });
+                    if (checklistData.categories[catIndex]) {
+                        checklistData.categories[catIndex].collapsed = cat.collapsed || false;
+                        cat.items.forEach((item, itemIndex) => {
+                            if (checklistData.categories[catIndex].items[itemIndex]) {
+                                checklistData.categories[catIndex].items[itemIndex].price = item.price;
+                                checklistData.categories[catIndex].items[itemIndex].checked = item.checked;
+                                checklistData.categories[catIndex].items[itemIndex].quantity = item.quantity || 1;
+                            }
+                        });
+                    }
                 });
                 
                 const savedNotes = localStorage.getItem('shoppingChecklistNotes');
@@ -532,6 +612,44 @@
             }, 2000);
         }
 
+        // Alternar categoria (minimizar/expandir)
+        function toggleCategory(categoryId) {
+            const category = checklistData.categories.find(c => c.id === categoryId);
+            if (category) {
+                category.collapsed = !category.collapsed;
+                saveChecklist();
+                renderChecklist();
+            }
+        }
+
+        // Expandir todas as categorias
+        function expandAllCategories() {
+            checklistData.categories.forEach(category => {
+                category.collapsed = false;
+            });
+            saveChecklist();
+            renderChecklist();
+        }
+
+        // Minimizar todas as categorias
+        function collapseAllCategories() {
+            checklistData.categories.forEach(category => {
+                category.collapsed = true;
+            });
+            saveChecklist();
+            renderChecklist();
+        }
+
+        // Alternar todas as categorias
+        function toggleAllCategories() {
+            const allCollapsed = checklistData.categories.every(category => category.collapsed);
+            checklistData.categories.forEach(category => {
+                category.collapsed = !allCollapsed;
+            });
+            saveChecklist();
+            renderChecklist();
+        }
+
         // Calcular subtotal do item
         function calculateItemSubtotal(quantity, price) {
             return (parseFloat(quantity) || 1) * (parseFloat(price) || 0);
@@ -544,7 +662,7 @@
             
             checklistData.categories.forEach(category => {
                 const categoryElement = document.createElement('div');
-                categoryElement.className = 'category';
+                categoryElement.className = `category ${category.collapsed ? 'collapsed' : ''}`;
                 categoryElement.id = `category-${category.id}`;
                 
                 // Calcular total da categoria
@@ -556,52 +674,57 @@
                 });
                 
                 categoryElement.innerHTML = `
-                    <div class="category-header">
-                        <div class="category-title">${category.title}</div>
+                    <div class="category-header" onclick="toggleCategory('${category.id}')">
+                        <div class="category-title">
+                            <span class="toggle-icon">${category.collapsed ? '▶️' : '▼'}</span>
+                            ${category.title}
+                        </div>
                         <div class="category-total">R$ ${categoryTotal.toFixed(2)}</div>
                     </div>
-                    <div class="items-list" id="items-${category.id}">
-                        ${category.items.map(item => {
-                            const subtotal = calculateItemSubtotal(item.quantity, item.price);
-                            return `
-                            <div class="item">
-                                <div class="item-info">
-                                    <input type="checkbox" 
-                                           class="item-checkbox" 
-                                           id="check-${item.id}"
-                                           ${item.checked ? 'checked' : ''}
-                                           onchange="toggleItem('${category.id}', '${item.id}')">
-                                    <div class="item-controls">
-                                        <div class="item-name">${item.name}</div>
-                                        <div class="item-price-controls">
-                                            <input type="number" 
-                                                   class="quantity-input" 
-                                                   id="qty-${item.id}"
-                                                   value="${item.quantity || 1}"
-                                                   placeholder="1"
-                                                   step="0.1"
-                                                   min="0.1"
-                                                   onchange="updateQuantity('${category.id}', '${item.id}', this.value)">
-                                            <span class="unit-price-label">${item.unit}</span>
-                                            <input type="number" 
-                                                   class="price-input" 
-                                                   id="price-${item.id}"
-                                                   value="${item.price || ''}"
-                                                   placeholder="0,00"
-                                                   step="0.01"
-                                                   min="0"
-                                                   onchange="updatePrice('${category.id}', '${item.id}', this.value)">
-                                            <span class="unit-price-label">preço/un.</span>
+                    <div class="category-content">
+                        <div class="items-list" id="items-${category.id}">
+                            ${category.items.map(item => {
+                                const subtotal = calculateItemSubtotal(item.quantity, item.price);
+                                return `
+                                <div class="item">
+                                    <div class="item-info">
+                                        <input type="checkbox" 
+                                               class="item-checkbox" 
+                                               id="check-${item.id}"
+                                               ${item.checked ? 'checked' : ''}
+                                               onchange="toggleItem('${category.id}', '${item.id}')">
+                                        <div class="item-controls">
+                                            <div class="item-name">${item.name}</div>
+                                            <div class="item-price-controls">
+                                                <input type="number" 
+                                                       class="quantity-input" 
+                                                       id="qty-${item.id}"
+                                                       value="${item.quantity || 1}"
+                                                       placeholder="1"
+                                                       step="0.1"
+                                                       min="0.1"
+                                                       onchange="updateQuantity('${category.id}', '${item.id}', this.value)">
+                                                <span class="unit-price-label">${item.unit}</span>
+                                                <input type="number" 
+                                                       class="price-input" 
+                                                       id="price-${item.id}"
+                                                       value="${item.price || ''}"
+                                                       placeholder="0,00"
+                                                       step="0.01"
+                                                       min="0"
+                                                       onchange="updatePrice('${category.id}', '${item.id}', this.value)">
+                                                <span class="unit-price-label">preço/un.</span>
+                                            </div>
                                         </div>
                                     </div>
+                                    <div>
+                                        <div class="item-value">R$ ${subtotal.toFixed(2)}</div>
+                                        ${item.price > 0 ? `<div class="item-subtotal">${item.quantity} ${item.unit} × R$ ${(parseFloat(item.price) || 0).toFixed(2)}</div>` : ''}
+                                    </div>
                                 </div>
-                                <div>
-                                    <div class="item-value">R$ ${subtotal.toFixed(2)}</div>
-                                    ${item.price > 0 ? `<div class="item-subtotal">${item.quantity} ${item.unit} × R$ ${(parseFloat(item.price) || 0).toFixed(2)}</div>` : ''}
-                                </div>
-                            </div>
-                            `;
-                        }).join('')}
+                                `;
+                            }).join('')}
+                        </div>
                     </div>
                 `;
                 
@@ -774,7 +897,7 @@
             doc.setFont("helvetica", "normal");
             doc.setFontSize(11);
             doc.setTextColor(100, 100, 100);
-            doc.text("Exportado em " + new Date().toLocaleDateString('pt-BR'), pageWidth / 2, yPos, { align: "center" });
+            doc.text("Para homem de 32 anos - Exportado em " + new Date().toLocaleDateString('pt-BR'), pageWidth / 2, yPos, { align: "center" });
             yPos += 15;
             
             // Dados das categorias
@@ -986,6 +1109,7 @@
         function confirmClear() {
             // Limpar dados
             checklistData.categories.forEach(category => {
+                category.collapsed = false;
                 category.items.forEach(item => {
                     item.price = 0;
                     item.checked = false;
