@@ -7,7 +7,7 @@
     <!-- Biblioteca para exportar para Excel -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <!-- Biblioteca para exportar para PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umm.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * {
@@ -168,7 +168,7 @@
         
         .category-title .toggle-icon {
             transition: transform 0.3s ease;
-            font-size: 1.1rem;
+            font-size: 0.9rem;
         }
         
         .category.collapsed .toggle-icon {
@@ -184,9 +184,12 @@
         }
         
         .category-content {
-            max-height: 400px;
             overflow: hidden;
             transition: max-height 0.3s ease-in-out;
+        }
+        
+        .category:not(.collapsed) .category-content {
+            max-height: 400px;
         }
         
         .category.collapsed .category-content {
@@ -196,6 +199,9 @@
         .items-list {
             padding: 20px;
             overflow-y: auto;
+        }
+        
+        .category:not(.collapsed) .items-list {
             max-height: 350px;
         }
         
@@ -676,7 +682,7 @@
                 categoryElement.innerHTML = `
                     <div class="category-header" onclick="toggleCategory('${category.id}')">
                         <div class="category-title">
-                            <span class="toggle-icon">${category.collapsed ? '▶️' : '▼'}</span>
+                            <span class="toggle-icon">${category.collapsed ? '▶' : '▼'}</span>
                             ${category.title}
                         </div>
                         <div class="category-total">R$ ${categoryTotal.toFixed(2)}</div>
